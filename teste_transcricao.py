@@ -112,6 +112,6 @@ def transcrever_e_salvar(arquivo_wav, chave, regiao, pasta_saida='transcricoes')
 if __name__ == "__main__":
 
     print(USO_ESTIMADO_ATUAL_SEGUNDOS)
-    t = transcrever_e_salvar('audio.wav.wav', AZURE_SPEECH_KEY, AZURE_SPEECH_REGION)
+    t = transcrever_e_salvar('audio.wav', AZURE_SPEECH_KEY, AZURE_SPEECH_REGION)
     print(t)
     print(USO_ESTIMADO_ATUAL_SEGUNDOS)

@@ -16,5 +16,5 @@ def baixar_audio_para_wav(url, destino='audio.wav'):
         ydl.download([url])
 
 # Exemplo de uso:
-video_url = 'https://www.youtube.com/shorts/YSq1P7XfWmg'  # Substitua por qualquer URL real
+video_url = 'https://www.youtube.com/watch?v=NA72Vx4HQ_A'
 baixar_audio_para_wav(video_url)
