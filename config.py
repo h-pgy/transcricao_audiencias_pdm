@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 
+from utils.path import create_folder_if_not_exists, solve_path
 
 def load_env_var(varname:str)->str:
     """
@@ -27,3 +28,8 @@ def load_env_var(varname:str)->str:
 
 AZURE_SPEECH_KEY = load_env_var("AZURE_SPEECH_KEY")
 AZURE_SPEECH_REGION = load_env_var("AZURE_SPEECH_REGION")
+
+
+DATA_FOLDER = create_folder_if_not_exists(load_env_var('DATA_FOLDER'))
+
+WAV_FOLDER = solve_path('youtube_wav_files', DATA_FOLDER)

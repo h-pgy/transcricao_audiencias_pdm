@@ -1,20 +1,21 @@
-import yt_dlp
+from core.youtube_download.download_audio import YoutubeAudioDownloader
+import os
 
-def baixar_audio_para_wav(url, destino='audio.wav'):
-    opcoes = {
-        'format': 'bestaudio/best',
-        'outtmpl': destino,
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'wav',
-            'preferredquality': '192',
-        }],
-        'quiet': False
-    }
+if __name__=='__main__':
+    # Test the YoutubeAudioDownloader class
+    downloader = YoutubeAudioDownloader()
+    url = 'https://www.youtube.com/shorts/0v7KlAS0kH0'  # Replace with a valid YouTube URL
+    output_path = 'test_audio1.wav'  # Replace with your desired output path
 
-    with yt_dlp.YoutubeDL(opcoes) as ydl:
-        ydl.download([url])
+    # Download the audio
+    file = downloader(url, output_path)
+    print(f"Audio downloaded to: {file}")
+    # Check if the file exists
+    assert os.path.isfile(file)
+    delete = input('Delete file? (y/n): ')
+    if delete.lower() == 'y':
+        os.remove(file)
+        print(f"File {file} deleted.")
+    else:
+        print(f"File {file} not deleted.")
 
-# Exemplo de uso:
-video_url = 'https://www.youtube.com/watch?v=NA72Vx4HQ_A'
-baixar_audio_para_wav(video_url)
