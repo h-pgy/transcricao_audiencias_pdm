@@ -1,9 +1,11 @@
 import os
+from typing import Optional, Union, Type
 from dotenv import load_dotenv
 
 from utils.path import create_folder_if_not_exists, solve_path
 
-def load_env_var(varname:str)->str:
+
+def load_env_var(varname:str, cast_type:Optional[Type]=None)->Union[int, float, bool, str]:
     """
     Loads the value of an environment variable from a .env file.
     This function uses the `load_dotenv` method to load environment variables
@@ -21,15 +23,23 @@ def load_env_var(varname:str)->str:
     load_dotenv()
 
     try:
-        return os.environ[varname]
+        value = os.environ[varname]
     except KeyError:
         raise RuntimeError(f'Environment variable {varname} not defined.')
+    
+    if cast_type is not None:
+        try:
+            value = cast_type(value)
+        except ValueError:
+            raise ValueError(f'Cannot cast environment variable {varname} to {cast_type.__name__}.')
+    return value
+
+AZURE_SPEECH_KEY: str = load_env_var("AZURE_SPEECH_KEY")
+AZURE_SPEECH_REGION: str = load_env_var("AZURE_SPEECH_REGION")
 
 
-AZURE_SPEECH_KEY = load_env_var("AZURE_SPEECH_KEY")
-AZURE_SPEECH_REGION = load_env_var("AZURE_SPEECH_REGION")
+DATA_FOLDER: str = create_folder_if_not_exists(load_env_var('DATA_FOLDER'))
 
+WAV_FOLDER: str = solve_path('youtube_wav_files', DATA_FOLDER)
 
-DATA_FOLDER = create_folder_if_not_exists(load_env_var('DATA_FOLDER'))
-
-WAV_FOLDER = solve_path('youtube_wav_files', DATA_FOLDER)
+SAS_TTL_SECONDS: int = load_env_var("SAS_TTL_SECONDS", int)
