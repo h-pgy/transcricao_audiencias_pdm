@@ -43,3 +43,6 @@ DATA_FOLDER: str = create_folder_if_not_exists(load_env_var('DATA_FOLDER'))
 WAV_FOLDER: str = solve_path('youtube_wav_files', DATA_FOLDER)
 
 SAS_TTL_SECONDS: int = load_env_var("SAS_TTL_SECONDS", int)
+
+AZURE_STORAGE_CONNECTION_STRING: str = load_env_var("AZURE_STORAGE_CONNECTION_STRING")
+AZURE_STORAGE_CONTAINER_NAME: str = load_env_var("AZURE_STORAGE_CONTAINER_NAME")

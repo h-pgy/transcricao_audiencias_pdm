@@ -1,0 +1,7 @@
+from .blob_utils import BlobStorageSasTokenGenerator
+from .upload_wav_to_blob import WavToBlobUploader
+from config import AZURE_STORAGE_CONNECTION_STRING
+
+
+generate_sas_token = BlobStorageSasTokenGenerator(AZURE_STORAGE_CONNECTION_STRING)
+upload_wav_to_blob = WavToBlobUploader(AZURE_STORAGE_CONNECTION_STRING)
