@@ -1,4 +1,5 @@
 from typing import Optional
+import os
 from utils.path import solve_path, create_folder_if_not_exists
 from .blob_utils import BlobStorageUploader, BlobStorageSasTokenGenerator
 
@@ -25,6 +26,13 @@ class WavToBlobUploader:
     def __get_file_path(self, file_path: str) -> str:
 
         return solve_path(file_path, self.file_folder)
+    
+    def gen_sas_url(self, blob_name: str) -> str:
+
+        token: str = self.generate_sas_token(self.container_name, blob_name)
+        url: str = f"https://{self.blob_uploader.account_name}.blob.core.windows.net/{self.container_name}/{blob_name}?{token}"
+
+        return url
 
     def upload_wav(self, file_name: str, blob_name:Optional[str]=None) -> str:
         """
@@ -32,15 +40,17 @@ class WavToBlobUploader:
         """
 
         file_path = self.__get_file_path(file_name)
+        if not os.path.exists(file_path):
+            raise ValueError(f"File {file_path} does not exist.")
         if blob_name is None:
-            blob_name = file_name
+            blob_name = os.path.basename(file_name)
 
-        self.blob_uploader(self.container_name, blob_name, file_path, content_type = 'audio/wav')
+        self.blob_uploader(self.container_name, file_path, blob_name, content_type = 'audio/wav')
         print(f"Uploaded {file_path} to {self.container_name}/{blob_name}")
 
-        token: str = self.generate_sas_token(self.container_name, blob_name)
+        url: str = self.gen_sas_url(blob_name)
 
-        return token
+        return url
     
     def __call__(self, file_name: str, blob_name:Optional[str]=None) -> str:
         """

@@ -32,6 +32,7 @@ class BlobStorageUploader:
 
         self.conn_string: str = connection_string
         self.blob_service_client: BlobServiceClient = conect_blob_storage(self.conn_string)
+        self.account_name: str = self.blob_service_client.account_name
 
     def __solve_blob_name(self, file_path:str, blob_name:Optional[str]) -> str:
 
@@ -61,7 +62,7 @@ class BlobStorageUploader:
         """
         Upload a file to Azure Blob Storage.
         """
-        self.upload_blob(container_name, blob_name, file_path, **content_settings)
+        self.upload_blob(container_name, file_path, blob_name, **content_settings)
 
 
 
@@ -72,6 +73,7 @@ class BlobStorageSasTokenGenerator:
         self.conn_string: str = connection_string
         self.sas_ttl_seconds: int = sas_ttl_seconds if sas_ttl_seconds else SAS_TTL_SECONDS
         self.blob_service_client: BlobServiceClient = conect_blob_storage(self.conn_string)
+        self.account_name: str = self.blob_service_client.account_name
 
     def __solve_expiry_time(self, expiry_seconds: Optional[int]) -> datetime:
         """
