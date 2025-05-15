@@ -6,7 +6,9 @@ from azure.storage.blob import (
     BlobServiceClient, 
     ContentSettings, 
     generate_blob_sas, 
-    BlobSasPermissions
+    generate_container_sas,
+    BlobSasPermissions,
+    ContainerSasPermissions
 )
 
 from config import SAS_TTL_SECONDS
@@ -83,7 +85,7 @@ class BlobStorageSasTokenGenerator:
             expiry_seconds = self.sas_ttl_seconds
         return datetime.now(timezone.utc) + timedelta(seconds=expiry_seconds)
 
-    def generate_sas_token(self, container_name: str, blob_name: str, expiry_seconds: Optional[int] = None) -> str:
+    def generate_blob_sas_token(self, container_name: str, blob_name: str, expiry_seconds: Optional[int] = None) -> str:
         """
         Generate a SAS token for a blob in Azure Blob Storage with only read permissions.
         """
@@ -101,8 +103,61 @@ class BlobStorageSasTokenGenerator:
 
         return sas_token
     
-    def __call__(self, container_name: str, blob_name: str, expiry_seconds: Optional[int] = None) -> str:
+    def generate_container_sas_token(self, container_name: str, expiry_seconds: Optional[int] = None) -> str:
+        """
+        Generate a SAS token for a container in Azure Blob Storage with only read permissions.
+        """
+        
+        expiry_time: datetime = self.__solve_expiry_time(expiry_seconds)
+
+        sas_token = generate_container_sas(
+            account_name=self.blob_service_client.account_name,
+            container_name=container_name,
+            account_key=self.blob_service_client.credential.account_key,
+            permission=ContainerSasPermissions(read=True, write=True, add=True, create=True, list=True),
+            expiry=expiry_time
+        )
+
+        return sas_token
+    
+    def build_blob_sas_url(self, container_name: str, blob_name: str, sas_token:str) -> str:
+        """
+        Generate a SAS URL for a blob in Azure Blob Storage based on passed token.
+        """
+        
+        url = f"https://{self.blob_service_client.account_name}.blob.core.windows.net/{container_name}/{blob_name}?{sas_token}"
+
+        return url
+    
+    def builb_container_sas_url(self, container_name: str, sas_token:str) -> str:
+        """
+        Generate a SAS URL for a container in Azure Blob Storage based on passed token.
+        """
+        
+        url = f"https://{self.blob_service_client.account_name}.blob.core.windows.net/{container_name}?{sas_token}"
+
+        return url
+    
+    def __call__(self, container_name: str, blob_name: Optional[str]=None, expiry_seconds: Optional[int] = None, 
+                 blob_token:bool=False, container_token:bool=True, url:bool=True) -> str:
         """
         Generate a SAS token for a blob in Azure Blob Storage with only read permissions.
         """
-        return self.generate_sas_token(container_name, blob_name, expiry_seconds)
+
+        if blob_token:
+            if blob_name is None:
+                raise ValueError("blob_name must be provided when blob_token is True.")
+            token = self.generate_blob_sas_token(container_name, blob_name, expiry_seconds)
+            if not url:
+                return token
+            return self.build_blob_sas_url(container_name, blob_name, token)
+        
+        elif container_token:
+            token = self.generate_container_sas_token(container_name, expiry_seconds)
+            if not url:
+                return token
+            return self.builb_container_sas_url(container_name, token)
+        
+        else:
+            raise ValueError("Either blob_token or container_token must be True.")
+    

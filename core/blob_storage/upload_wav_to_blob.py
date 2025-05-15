@@ -26,13 +26,7 @@ class WavToBlobUploader:
     def __get_file_path(self, file_path: str) -> str:
 
         return solve_path(file_path, self.file_folder)
-    
-    def gen_sas_url(self, blob_name: str) -> str:
 
-        token: str = self.generate_sas_token(self.container_name, blob_name)
-        url: str = f"https://{self.blob_uploader.account_name}.blob.core.windows.net/{self.container_name}/{blob_name}?{token}"
-
-        return url
 
     def upload_wav(self, file_name: str, blob_name:Optional[str]=None) -> str:
         """
@@ -48,7 +42,7 @@ class WavToBlobUploader:
         self.blob_uploader(self.container_name, file_path, blob_name, content_type = 'audio/wav')
         print(f"Uploaded {file_path} to {self.container_name}/{blob_name}")
 
-        url: str = self.gen_sas_url(blob_name)
+        url: str = self.generate_sas_token(self.container_name, blob_name, blob_token=True, url=True)
 
         return url
     
