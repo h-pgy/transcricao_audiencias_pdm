@@ -5,7 +5,7 @@ from .blob_utils import BlobStorageUploader, BlobStorageSasTokenGenerator
 
 from config import (
             AZURE_STORAGE_CONNECTION_STRING,
-            AZURE_STORAGE_CONTAINER_NAME,
+            AZURE_STORAGE_AUDIO_CONTAINER_NAME,
             WAV_FOLDER, 
                       )
 
@@ -14,7 +14,7 @@ class WavToBlobUploader:
     Class to upload WAV files to Azure Blob Storage.
     """
     def __init__(self, connection_string: str = AZURE_STORAGE_CONNECTION_STRING, 
-                 container_name: str = AZURE_STORAGE_CONTAINER_NAME, file_folder:str=WAV_FOLDER) -> None:
+                 container_name: str = AZURE_STORAGE_AUDIO_CONTAINER_NAME, file_folder:str=WAV_FOLDER) -> None:
         
         self.blob_uploader = BlobStorageUploader(connection_string)
         self.container_name: str = container_name
