@@ -1,16 +1,21 @@
 import requests
 from typing import List, Optional
 import time
-from config import AZURE_SPEECH_KEY, AZURE_SPEECH_REGION
+from config import (
+    AZURE_SPEECH_REGION,
+    AZURE_SPEECH_KEY,
+    )
 
 class AzureBatchTranscriptionClient:
 
     version:str = '3.2'
+    default_display_name = 'batch_transcription'
+    default_language = 'pt-BR'
 
-    def __init__(self, subscription_key: str, region: str, language: str = 'pt-BR') -> None:
+    def __init__(self, subscription_key: str=AZURE_SPEECH_KEY, region: str=AZURE_SPEECH_REGION, language:Optional[str]=None) -> None:
         self.subscription_key = subscription_key
         self.region: str = region
-        self.language: str = language
+        self.language: str = language or self.default_language
         self.domain: str = f'{self.region}.api.cognitive.microsoft.com'
         self.base_url: str = self.__get_base_url()
 
@@ -25,13 +30,21 @@ class AzureBatchTranscriptionClient:
             'Content-Type': 'application/json'
         }
     
-    def initiate_transcription_job(self, audio_sas_urls: List[str], display_name: str = 'batch_transcription') -> str:
+    def initiate_transcription_job(self, audio_sas_urls: List[str], dest_container_url:str, display_name:Optional[str]=None) -> str:
         
+        if display_name is None:
+            display_name = self.default_display_name
+
         body = {
-            'diarizationEnabled' : True,
             'contentUrls' : audio_sas_urls,
             'locale' : self.language,
-            'displayName' : display_name
+            'displayName' : display_name,
+            'properties' : {
+                'wordLevelTimestampsEnabled' : False,
+                'punctuationMode' : 'DictatedAndAutomatic',
+                'profanityFilterMode' : 'None',
+                'destinationContainerUrl' : dest_container_url,
+                },
         }
         print(f'Posting to Azure API: {self.base_url}')
         response: requests.Response = requests.post(self.base_url, headers=self.headers, json=body)
@@ -49,12 +62,12 @@ class AzureBatchTranscriptionClient:
             raise Exception(f"Error checking transcription job status: {response.status_code} - {response.text}")
         
     
-    def __call__(self, audio_sas_urls: List[str], display_name: str = 'batch_transcription') -> Optional[dict]:
+    def __call__(self, audio_sas_urls: List[str], dest_container_url: str, display_name:Optional[str]=None) -> Optional[dict]:
         """
         Initiate a batch transcription job and check its status.
         """
         # Start the transcription job
-        status_url = self.initiate_transcription_job(audio_sas_urls, display_name)
+        status_url = self.initiate_transcription_job(audio_sas_urls, dest_container_url, display_name)
         print(f"Transcription job started. Status URL: {status_url}")
         # Check the status of the transcription job
         while True:
@@ -67,15 +80,10 @@ class AzureBatchTranscriptionClient:
             print('Waiting for 10 seconds before checking the status again...')
         # Return the transcription result
         if status_response['status'] == 'Succeeded':
-            print(status_response)
+            print(f"Transcription job succeeded.Response: {status_response}")
             with requests.get(status_response['links']['files'], headers=self.headers) as r:
                 resp = r.json()
-                print('*'*40)
-                print(resp)
-                print('*'*40)
-                new_url = resp['values'][0]['links']['contentUrl']
-                with requests.get(new_url, headers=self.headers) as r:
-                    print(r.json())
+                return resp
         else:
             print(f"Transcription job failed: {status_response['message']}")
             return None

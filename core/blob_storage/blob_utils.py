@@ -114,7 +114,7 @@ class BlobStorageSasTokenGenerator:
             account_name=self.blob_service_client.account_name,
             container_name=container_name,
             account_key=self.blob_service_client.credential.account_key,
-            permission=ContainerSasPermissions(read=True, write=True, add=True, create=True, list=True),
+            permission=ContainerSasPermissions(read=True, write=True, add=True, create=True, list=True, execute=True),
             expiry=expiry_time
         )
 
