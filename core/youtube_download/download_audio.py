@@ -34,7 +34,7 @@ class YoutubeAudioDownloader:
         
         return url
 
-    def __yt_dlp_save_options(self, dest_file_path:str)->str:
+    def __yt_dlp_save_options(self, dest_file_path:str)->dict:
         
         options = {
             'format': 'bestaudio/best',

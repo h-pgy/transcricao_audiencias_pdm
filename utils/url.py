@@ -9,9 +9,8 @@ def is_url(string):
     
 
 
-def get_domain(url):
-    try:
-        parsed = urlparse(url)
-        return parsed.netloc
-    except Exception:
-        return None
+def get_domain(url)->str:
+    
+    parsed = urlparse(url)
+    return parsed.netloc
+  
