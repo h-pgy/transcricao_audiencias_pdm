@@ -6,6 +6,7 @@ from utils.path import solve_path
 from utils.time import validar_timestamp_video
 from utils.url import is_url, get_domain
 from config import WAV_FOLDER, COOKIES_FILE_NAME
+import re
 
 class YoutubeAudioDownloader:
 
@@ -31,8 +32,9 @@ class YoutubeAudioDownloader:
         if not is_url(url):
             raise ValueError(f'Must be valid url: {url}')
         
-        if 'youtube' not in get_domain(url):
-            raise ValueError('Must be youtube url.')
+        domain: str = get_domain(url)
+        if not re.search(r'(youtube\.com|youtu\.be)', domain):
+            raise ValueError(f'Must be youtube url. Passed url: {url}')
         
         return url
     

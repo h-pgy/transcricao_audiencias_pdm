@@ -6,11 +6,11 @@ from config import (
     AZURE_SPEECH_KEY,
     )
 
-class AzureBatchTranscriptionClient:
+class AzureBatchTranscriptionJob:
 
     version:str = '3.2'
-    default_display_name = 'batch_transcription'
-    default_language = 'pt-BR'
+    default_display_name: str = 'batch_transcription'
+    default_language: str = 'pt-BR'
 
     def __init__(self, subscription_key: str=AZURE_SPEECH_KEY, region: str=AZURE_SPEECH_REGION, language:Optional[str]=None) -> None:
         self.subscription_key = subscription_key
@@ -30,7 +30,7 @@ class AzureBatchTranscriptionClient:
             'Content-Type': 'application/json'
         }
     
-    def initiate_transcription_job(self, audio_sas_urls: List[str], dest_container_url:str, display_name:Optional[str]=None) -> str:
+    def initiate_transcription_job(self, audio_sas_urls: List[str], dest_container_url:str, display_name:Optional[str]=None)->None:
         
         if display_name is None:
             display_name = self.default_display_name
@@ -47,44 +47,35 @@ class AzureBatchTranscriptionClient:
                 },
         }
         print(f'Posting to Azure API: {self.base_url}')
+        print(body)
         response: requests.Response = requests.post(self.base_url, headers=self.headers, json=body)
         if response.status_code == 201:
-            return response.headers["Location"]
+            print('Job initiated successfully.')
+            self.status_url: str = response.headers["Location"]
         else:
             raise Exception(f"Error initiating transcription job: {response.status_code} - {response.text}")
 
-    def check_transcription_job_status(self, status_url: str) -> dict:    
-
-        response: requests.Response = requests.get(status_url, headers=self.headers)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception(f"Error checking transcription job status: {response.status_code} - {response.text}")
+    @property
+    def status(self) -> str:
         
-    
-    def __call__(self, audio_sas_urls: List[str], dest_container_url: str, display_name:Optional[str]=None) -> Optional[dict]:
-        """
-        Initiate a batch transcription job and check its status.
-        """
-        # Start the transcription job
-        status_url = self.initiate_transcription_job(audio_sas_urls, dest_container_url, display_name)
-        print(f"Transcription job started. Status URL: {status_url}")
-        # Check the status of the transcription job
-        while True:
-            status_response = self.check_transcription_job_status(status_url)
-            print(f"Transcription job status: {status_response['status']}")
-            if status_response['status'] in ['Succeeded', 'Failed']:
-                break
-            # Wait for a while before checking the status again
-            time.sleep(10)
-            print('Waiting for 10 seconds before checking the status again...')
-        # Return the transcription result
-        if status_response['status'] == 'Succeeded':
-            print(f"Transcription job succeeded.Response: {status_response}")
-            with requests.get(status_response['links']['files'], headers=self.headers) as r:
-                resp = r.json()
-                return resp
+        if not self.status_url:
+            raise RuntimeError("Transcrição ainda não foi iniciada.")
+        response = requests.get(self.status_url, headers=self.headers)
+        if response.status_code == 200:
+            self._status = response.json()['status']
+            return self._status
         else:
-            print(f"Transcription job failed: {status_response['message']}")
+            raise Exception(f"Erro ao consultar status: {response.status_code} - {response.text}")
+        
+    def get_results_metadata(self) -> Optional[dict]:
+        if self.status != "Succeeded":
             return None
+        response = requests.get(f"{self.status_url}", headers=self.headers)
+        response.raise_for_status()
+        return response.json()
+
+    def is_finished(self) -> bool:
+        return self.status in ["Succeeded", "Failed"]
+    
+    
         
