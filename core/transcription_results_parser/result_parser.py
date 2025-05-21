@@ -31,7 +31,7 @@ class ResultParser:
 
         return max(frase_list, key=lambda x: x.get('confidence', 0))
     
-    def get_best_guess_frase_channel(self, channel_prediction:list[dict])->dict:
+    def get_best_guess_frase_channel(self, channel_prediction:dict)->dict:
 
         n_best_frases = channel_prediction['nBest']
 
@@ -42,7 +42,7 @@ class ResultParser:
 
         return Levenshtein.ratio(frase_1, frase_2)
     
-    def check_guess_similarity(self, guess_1:str, guess_2:str)->float:
+    def check_guess_similarity(self, guess_1:dict, guess_2:dict)->float:
 
         frase_1 = guess_1['lexical']
         frase_2 = guess_2['lexical']
@@ -51,8 +51,10 @@ class ResultParser:
 
         if similarity < 0.8:
             raise RuntimeError(f'Frase mismatch: {frase_1} X {frase_2}')
+        
+        return similarity
 
-    def get_best_guess_frase_channel_pair(self, channel_pair:list[dict])->list:
+    def get_best_guess_frase_channel_pair(self, channel_pair:list[dict])->dict:
 
         if channel_pair[0] is None:
             return self.get_best_guess_frase_channel(channel_pair[1])
